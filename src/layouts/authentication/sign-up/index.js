@@ -1,18 +1,8 @@
-/**
-=========================================================
-* Material Dashboard 2 React - v2.2.0
-=========================================================
-
-* Product Page: https://www.creative-tim.com/product/material-dashboard-react
-* Copyright 2023 Creative Tim (https://www.creative-tim.com)
-
-Coded by www.creative-tim.com
-
- =========================================================
-
-* The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-*/
-
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { createUserWithEmailAndPassword } from "firebase/auth";
+import { auth } from "../../../firebase/firebase";
+import { doc, setDoc } from "firebase/firestore";
 // react-router-dom components
 import { Link } from "react-router-dom";
 
@@ -31,8 +21,34 @@ import CoverLayout from "layouts/authentication/components/CoverLayout";
 
 // Images
 import bgImage from "assets/images/bg-sign-up-cover.jpeg";
+import { Password } from "@mui/icons-material";
 
 function Cover() {
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const navigate = useNavigate();
+
+  const handleSignUp = async (e) => {
+    e.preventDefault();
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      
+      // Crear documento de usuario en Firestore
+      await setDoc(doc(db, "users", userCredential.user.uid), {
+        displayName: name,
+        email: email,
+        role: "vendedor", // Rol por defecto
+        createdAt: new Date(),
+        isActive: true
+      });
+      
+      navigate("/authentication/sign-in");
+    } catch (err) {
+      setError(err.message);
+    }
+  };
   return (
     <CoverLayout image={bgImage}>
       <Card>
@@ -56,35 +72,47 @@ function Cover() {
         </MDBox>
         <MDBox pt={4} pb={3} px={3}>
           <MDBox component="form" role="form">
-            <MDBox mb={2}>
-              <MDInput type="text" label="Name" variant="standard" fullWidth />
+          <MDBox mb={2}>
+              <MDInput 
+                type="text" 
+                label="Nombre" 
+                variant="standard" 
+                fullWidth 
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+              />
             </MDBox>
             <MDBox mb={2}>
-              <MDInput type="email" label="Email" variant="standard" fullWidth />
+              <MDInput 
+                type="email" 
+                label="email" 
+                variant="standard" 
+                fullWidth 
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
             </MDBox>
             <MDBox mb={2}>
-              <MDInput type="password" label="Password" variant="standard" fullWidth />
+              <MDInput 
+                type="password" 
+                label="Password" 
+                variant="standard" 
+                fullWidth 
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
             </MDBox>
-            <MDBox display="flex" alignItems="center" ml={-1}>
-              <Checkbox />
-              <MDTypography
-                variant="button"
-                fontWeight="regular"
-                color="text"
-                sx={{ cursor: "pointer", userSelect: "none", ml: -1 }}
-              >
-                &nbsp;&nbsp;I agree the&nbsp;
+            {error && (
+              <MDTypography variant="caption" color="error">
+                {error}
               </MDTypography>
-              <MDTypography
-                component="a"
-                href="#"
-                variant="button"
-                fontWeight="bold"
-                color="info"
-                textGradient
-              >
-                Terms and Conditions
-              </MDTypography>
+            )}
+            
+            
+            <MDBox mt={4} mb={1}>
+              <MDButton type="submit" variant="gradient" color="info" fullWidth>
+                Registrarse
+              </MDButton>
             </MDBox>
             <MDBox mt={4} mb={1}>
               <MDButton variant="gradient" color="info" fullWidth>
